@@ -1,0 +1,9 @@
+streamlit
+requests
+python-docx
+PyPDF2
+chromadb
+sentence-transformers
+beautifulsoup4
+tqdm
+python-dotenv
