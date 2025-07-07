@@ -1,135 +1,120 @@
-# 🔍 RAG Q&A Engine
+# 🔍 RAG Q&A Engine 
 
-A powerful Retrieval-Augmented Generation (RAG) application that allows you to upload documents or scrape websites, store content in a vector database (ChromaDB), and ask questions using OpenRouter-powered AI models like Mistral, Mixtral, etc.
-
----
-
-## 🚀 Features
-
-- 📄 Upload PDFs, DOCX, TXT, or Markdown files  
-- 🌐 Scrape web pages to extract and store content  
-- 🧠 Embed content using SentenceTransformers  
-- 🔎 Search chunks using ChromaDB (vector DB)  
-- 💬 Ask questions in a Streamlit chat interface  
-- 🔗 Powered by OpenRouter API (supports Mistral, Claude, LLaMA, Mixtral, etc.)
+This is a lightweight, local-first Retrieval-Augmented Generation (RAG) chatbot that can process documents and websites, embed them into a vector database, and generate answers using Google Gemini 1.5 Flash.
 
 ---
 
-## 📁 Project Structure
+## ✨ Features
 
-```
-rag-qa-engine/
-├── app.py                   # Streamlit frontend
-├── document_processor.py    # Embedding, chunking, and retrieval logic
-├── openrouter_client.py     # API interface for OpenRouter
-├── web_scraper.py           # Website scraping + .md file creation
-├── .env                     # API key (not checked in)
-├── requirements.txt         # Dependencies
-└── scraped_content/         # Saved markdowns from scraped sites
-```
+- 📄 Upload and process PDF, DOCX, TXT, and Markdown files
+- 🌐 Scrape websites and store readable content
+- 🔎 Vector search with ChromaDB and Sentence Transformers
+- 🤖 Answer generation using Gemini 1.5 Flash via API
+- 💬 Interactive chat interface powered by Streamlit
 
 ---
 
-## 🔧 Setup Instructions
+## 📦 Installation
 
-### 1. Clone the Repo
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/your-username/rag-qa-engine.git
 cd rag-qa-engine
 ```
 
-### 2. Create Virtual Environment
+### 2. Create and activate a virtual environment
 
 ```bash
 python -m venv .venv
-# Activate the environment
-# On Windows:
-.venv\Scripts\activate
-# On Linux/macOS:
-source .venv/bin/activate
+.venv\Scripts\activate   # On Windows
+# source .venv/bin/activate  # On macOS/Linux
 ```
 
-### 3. Install Dependencies
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Add Your OpenRouter API Key
-
-Create a `.env` file in the root directory and paste your key:
+### 🔐 Setup API Key
+Create a file named `.env` in the project root and add your Gemini API Key:
 
 ```
-OPENROUTER_API_KEY=sk-or-your-api-key-here
+GEMINI_API_KEY=your_api_key_here
 ```
 
----
-
-## ▶️ Run the App
+### 🚀 Run the App
 
 ```bash
 streamlit run app.py
 ```
 
-Then open your browser at: [http://localhost:8501](http://localhost:8501)
-
----
-
-## ✅ Supported Input Formats
-
-- `.pdf`
-- `.docx`
-- `.txt`
-- `.md`
-- Website URLs (converted to markdown)
-
----
-
-## 🧠 Tech Stack
-
-- **Frontend**: Streamlit  
-- **Vector DB**: ChromaDB  
-- **Embeddings**: SentenceTransformers (`all-MiniLM-L6-v2`)  
-- **LLM API**: [OpenRouter API](https://openrouter.ai)  
-- **Scraping**: `requests` + `BeautifulSoup`
-
----
-
-## 🌍 Models via OpenRouter
-
-This app supports any OpenRouter-compatible models.  
-Default model used:
+Then open the local URL shown in your terminal, usually:
 
 ```
-mistralai/mistral-7b-instruct
-```
-
-You can change this inside `openrouter_client.py` as:
-
-```python
-self.model = "anthropic/claude-3-haiku"  # or another model
+http://localhost:8501
 ```
 
 ---
 
-## 🛡️ Environment Variables
+## 📂 Project Structure
 
-| Key | Description |
-|-----|-------------|
-| `OPENROUTER_API_KEY` | Your OpenRouter API key |
-
----
-
-## 🙏 Acknowledgments
-
-- [OpenRouter](https://openrouter.ai)  
-- [Streamlit](https://streamlit.io)  
-- [ChromaDB](https://www.trychroma.com)  
-- [Sentence Transformers](https://www.sbert.net)
+```
+rag-qa-engine/
+├── app.py                  # Main Streamlit interface
+├── document_processor.py   # Handles file parsing and vector indexing
+├── gemini_client.py        # API wrapper for Gemini 1.5 Flash
+├── web_scraper.py          # Website scraping logic
+├── requirements.txt        # Dependencies
+├── .env                    # Your Gemini API key
+└── chroma_db/              # Local vector database (auto-created)
+```
 
 ---
 
-## 📜 License
+## 🔎 How It Works
+1. Upload or scrape content → extract plain text
+2. Chunk the text and embed using sentence-transformers
+3. Store chunks in ChromaDB with metadata
+4. On user query, retrieve relevant documents
+5. Send context + query to Gemini 1.5 Flash
+6. Display the answer in chat interface
 
-This project is licensed under the **MIT License**.
+---
+
+## 📄 Supported File Types
+- .pdf
+- .docx
+- .txt
+- .md
+
+---
+
+## 🤝 Contributing
+Pull requests and feedback welcome!
+
+---
+
+## 📃 License
+Licensed under the MIT License.
+
+---
+
+## 💡 Tips
+- Use well-formatted PDFs and clear website URLs for best results.
+- You can clear your ChromaDB directory (`chroma_db/`) if needed.
+- If your API key fails, ensure your Makersuite account has API access enabled.
+
+---
+
+## ⭐ Credits
+- Google Gemini API via google-generativeai
+- Vector DB via Chroma
+- Embeddings via sentence-transformers
+- UI via Streamlit
+
+---
+
+## 🙌 Author
+Made with ❤️ by Sai Agrawal
