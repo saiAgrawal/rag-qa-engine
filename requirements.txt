@@ -1,9 +1,10 @@
 streamlit
-requests
 python-docx
 PyPDF2
 chromadb
 sentence-transformers
+google-generativeai
 beautifulsoup4
+requests
 tqdm
 python-dotenv
