@@ -1,10 +1,13 @@
+# app.py
+
 import streamlit as st
 import os
 import tempfile
+from dotenv import load_dotenv
+
 from document_processor import DocumentProcessor
 from web_scraper import scrape_website_sync
-from openrouter_client import OpenRouterClient
-from dotenv import load_dotenv
+from gemini_client import GeminiClient  # ✅ replaced openrouter with Gemini
 
 load_dotenv()
 
@@ -13,17 +16,17 @@ st.set_page_config(page_title="RAG Q&A Engine", layout="wide")
 # Initialize
 @st.cache_resource
 def init_components():
-    return DocumentProcessor(), OpenRouterClient()
+    return DocumentProcessor(), GeminiClient()
 
-doc_processor, openrouter_client = init_components()
+doc_processor, gemini_client = init_components()
 
 st.title("🔍 RAG Q&A Engine")
 
 # Sidebar
 with st.sidebar:
     st.header("📄 Upload Documents")
-    uploaded_files = st.file_uploader("Choose files", accept_multiple_files=True, 
-                                     type=['pdf', 'docx', 'txt', 'md'])
+    uploaded_files = st.file_uploader("Choose files", accept_multiple_files=True,
+                                       type=['pdf', 'docx', 'txt', 'md'])
 
     if uploaded_files and st.button("Process Documents"):
         for file in uploaded_files:
@@ -63,7 +66,7 @@ if prompt := st.chat_input("Ask a question..."):
     with st.spinner("Thinking..."):
         context_docs = doc_processor.query_documents(prompt)
         context = "\n".join(context_docs) if context_docs else ""
-        response = openrouter_client.generate_response(prompt, context)
+        response = gemini_client.generate_response(prompt, context)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
     with st.chat_message("assistant"):
