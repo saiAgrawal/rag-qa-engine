@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+chroma_db/
+temp_files/
+scraped_content/
+*.log
+
+# Clerk secrets (keep these local)
+clerk_keys.json
+
+# Next.js
+next-clerk-auth/.next/
+next-clerk-auth/node_modules/
+next-clerk-auth/.env.local
+next-clerk-auth/npm-debug.log*
+next-clerk-auth/yarn-debug.log*
+next-clerk-auth/yarn-error.log*
+
+# Optional: ignore uploaded files during development
+uploads/
+documents/
