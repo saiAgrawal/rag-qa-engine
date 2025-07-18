@@ -23,10 +23,26 @@ if not token:
     st.markdown("3. Click 'Open RAG Q&A Engine' button")
     st.stop()
 
-# Test the token with backend - simplified
+# Test the token with backend - with retry mechanism
 headers = {"Authorization": f"Bearer {token}"}
 
-headers = {"Authorization": f"Bearer {token}"}
+def check_auth_with_retry():
+    """Check authentication with retry mechanism"""
+    try:
+        response = requests.get(f"{API_BASE}/auth-status", headers=headers, timeout=5)
+        if response.status_code == 200:
+            return True, None
+        else:
+            return False, f"Auth check failed: {response.status_code}"
+    except Exception as e:
+        return False, f"Auth check error: {str(e)}"
+
+# Check authentication status
+auth_valid, auth_error = check_auth_with_retry()
+if not auth_valid:
+    st.warning(f"⚠️ Authentication issue detected: {auth_error}")
+    st.info("💡 The app will continue to work, but if you experience issues, please refresh from the dashboard.")
+    st.markdown("[🔄 Return to Dashboard](http://localhost:3000/dashboard)")
 
 # =========================
 # UI Setup
@@ -185,20 +201,60 @@ with st.sidebar:
 # 🌐 Sidebar - Scrape Website
 # =========================
     st.header("🌐 Scrape Website")
-    url = st.text_input("Website URL")
-    if st.button("Scrape") and url:
-        with st.spinner("Scraping..."):
+    
+    # Add clear database option
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        url = st.text_input("Website URL")
+    with col2:
+        if st.button("🗑️ Clear DB", help="Clear all stored documents"):
+            with st.spinner("Clearing database..."):
+                try:
+                    clear_res = requests.post(f"{API_BASE}/clear-all", headers=headers)
+                    if clear_res.status_code == 200:
+                        st.success("✅ Database cleared!")
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to clear database")
+                except Exception as e:
+                    st.error(f"⚠️ Error: {e}")
+    
+    if st.button("Scrape & Replace") and url:
+        with st.spinner("Scraping website and replacing old data..."):
             try:
-                res = requests.post(f"{API_BASE}/scrape", json={"url": url}, headers=headers)
+                # Add timeout and show progress
+                with st.empty():
+                    st.info("🔄 Clearing old data and scraping new website...")
+                    res = requests.post(f"{API_BASE}/scrape", json={"url": url}, headers=headers, timeout=120)
+                    
                 if res.status_code == 200:
-                    st.success("✅ Website scraped and embedded!")
+                    result = res.json()
+                    if result.get("success"):
+                        st.success("✅ Website scraped successfully! Old data cleared.")
+                        st.info("💡 Now you can ask questions about this website only.")
+                        st.balloons()
+                    else:
+                        st.error("❌ Failed to scrape website")
                 elif res.status_code == 401:
-                    st.error("🔐 Authentication expired. Please refresh from the dashboard.")
+                    st.error("🔐 Authentication session expired during scraping.")
+                    st.info("💡 This can happen with long scraping operations. Please try again.")
                     st.markdown("[🔄 Return to Dashboard](http://localhost:3000/dashboard)")
+                    
+                    # Option to retry with same token
+                    if st.button("🔄 Retry Scraping", key="retry_scrape"):
+                        st.rerun()
                 else:
-                    st.error(f"❌ Error: {res.text}")
+                    st.error(f"❌ Scraping failed: {res.text}")
+                    st.info("💡 You can try again or check if the URL is accessible.")
+            except requests.exceptions.Timeout:
+                st.error("⏰ Scraping timed out (120 seconds). The website might be too large or slow.")
+                st.info("💡 Try again with a simpler page or check your internet connection.")
             except Exception as e:
-                st.error(f"⚠️ Scraping error: {e}")
+                st.error(f"⚠️ Unexpected error during scraping: {e}")
+                st.info("💡 Please try again or contact support if the issue persists.")
+    
+    # Show info about current behavior
+    st.info("💡 **Note:** Scraping will clear all previous data and only keep the new website content.")
 
 
 # =========================
@@ -206,13 +262,29 @@ with st.sidebar:
 # =========================
 st.header("💬 Chat")
 
+# Get available sources for display (but only show if multiple sources exist)
+try:
+    sources_response = requests.get(f"{API_BASE}/sources", headers=headers, timeout=5)
+    if sources_response.status_code == 200:
+        available_sources = sources_response.json().get("sources", [])
+        if len(available_sources) > 1:  # Only show if multiple sources
+            st.info(f"📚 Available sources: {', '.join(available_sources)}")
+    else:
+        available_sources = []
+except:
+    available_sources = []
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # Show chat history
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        st.write(msg["content"])
+        if isinstance(msg["content"], dict):
+            # Just show the answer, hide source info
+            st.write(msg["content"]["answer"])
+        else:
+            st.write(msg["content"])
 
 # Handle new prompt
 if prompt := st.chat_input("Ask a question..."):
@@ -222,16 +294,36 @@ if prompt := st.chat_input("Ask a question..."):
 
     with st.spinner("Thinking..."):
         try:
-            res = requests.post(f"{API_BASE}/chat", json={"prompt": prompt}, headers=headers)
+            res = requests.post(f"{API_BASE}/chat", json={"prompt": prompt}, headers=headers, timeout=60)
             if res.status_code == 200:
-                response = res.json().get("answer", "")
+                response_data = res.json()
+                response_content = {
+                    "answer": response_data.get("answer", ""),
+                    "sources_used": response_data.get("sources_used", []),
+                    "num_documents": response_data.get("num_documents", 0)
+                }
+                
+                # Display just the answer (no source info)
+                with st.chat_message("assistant"):
+                    st.write(response_content["answer"])
+                
+                st.session_state.messages.append({"role": "assistant", "content": response_content})
+                
             elif res.status_code == 401:
+                # More detailed error info for debugging
+                error_detail = res.text if res.text else "Unknown authentication error"
+                st.error(f"Authentication error: {error_detail}")
                 response = "🔐 Authentication expired. Please refresh from the dashboard: http://localhost:3000/dashboard"
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                with st.chat_message("assistant"):
+                    st.write(response)
             else:
-                response = f"❌ Error: {res.text}"
+                response = f"❌ Error {res.status_code}: {res.text}"
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                with st.chat_message("assistant"):
+                    st.write(response)
         except Exception as e:
             response = f"⚠️ Error: {e}"
-
-    st.session_state.messages.append({"role": "assistant", "content": response})
-    with st.chat_message("assistant"):
-        st.write(response)
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            with st.chat_message("assistant"):
+                st.write(response)

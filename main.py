@@ -102,6 +102,12 @@ async def get_user_info(current_user: dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving user info: {e}")
 
+# Simple auth status endpoint
+@app.get("/auth-status")
+async def auth_status(user_id: str = Depends(get_current_user_id)):
+    """Simple endpoint to check if authentication is working"""
+    return {"status": "authenticated", "user_id": user_id}
+
 # Apply Clerk JWT auth to all routers globally
 app.include_router(upload.router, dependencies=[Depends(get_current_user)])
 app.include_router(scrape.router, dependencies=[Depends(get_current_user)])

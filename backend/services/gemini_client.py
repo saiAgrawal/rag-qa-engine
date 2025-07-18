@@ -13,7 +13,7 @@ class GeminiClient:
             raise ValueError("❌ GEMINI_API_KEY not found in .env file.")
         
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
+        self.model = genai.GenerativeModel("gemini-2.0-flash")
 
     def generate_response(self, prompt, context=""):
         full_prompt = f"""

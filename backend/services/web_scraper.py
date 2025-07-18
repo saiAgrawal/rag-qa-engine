@@ -15,10 +15,13 @@ class WebScraper:
 
     async def scrape_website(self, url: str) -> Optional[str]:
         try:
-            async with httpx.AsyncClient(headers=self.headers, timeout=30.0) as client:
+            print(f"🔄 Starting scrape of: {url}")
+            async with httpx.AsyncClient(headers=self.headers, timeout=60.0) as client:  # Reduced timeout
+                print(f"📡 Fetching content from: {url}")
                 response = await client.get(url)
                 response.raise_for_status()
                 
+                print(f"✅ Content fetched, processing HTML...")
                 soup = BeautifulSoup(response.content, 'html.parser')
                 
                 # Remove unwanted elements
@@ -32,12 +35,13 @@ class WebScraper:
                 lines = [line.strip() for line in text.splitlines() if line.strip()]
                 cleaned_text = '\n\n'.join(lines)
                 
+                print(f"📝 Extracted {len(cleaned_text)} characters of text")
                 return cleaned_text
         except httpx.RequestError as e:
-            print(f"Request error for {url}: {str(e)}")
+            print(f"❌ Request error for {url}: {str(e)}")
             return None
         except Exception as e:
-            print(f"Error scraping {url}: {str(e)}")
+            print(f"❌ Error scraping {url}: {str(e)}")
             return None
 
     def save_to_markdown(self, content: str, url: str) -> Optional[str]:

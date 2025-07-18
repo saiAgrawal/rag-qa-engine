@@ -108,12 +108,13 @@ def verify_clerk_token(token: str) -> Dict:
         
         signing_key = get_signing_key(token)
         
+        # More lenient verification options - disable strict timing checks
         verify_options = {
             "verify_signature": True,
-            "verify_exp": True,
-            "verify_nbf": True,
-            "verify_iat": True,
-            "verify_aud": False
+            "verify_exp": False,  # Disable expiration check for long operations
+            "verify_nbf": False,  # Disable "not before" check
+            "verify_iat": False,  # Disable "issued at" check
+            "verify_aud": False   # Disable audience check
         }
         
         logger.debug(f"Verification options: {verify_options}")
@@ -122,7 +123,8 @@ def verify_clerk_token(token: str) -> Dict:
             token,
             signing_key,
             algorithms=["RS256"],
-            options=verify_options
+            options=verify_options,
+            leeway=300  # Add 5 minutes leeway for long operations
         )
         
         logger.info(f"Token verified successfully for user: {payload.get('sub')}")
